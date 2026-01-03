@@ -1,11 +1,41 @@
 "use client";
 
 import { useState } from "react";
-// Note the "../" to go back up one level to find the folders
 import { FEATURES } from "../data/features";
 import FeatureInput from "../components/FeatureInput";
 import XAIChart from "../components/XAIChart";
 import Suggestions from "../components/Suggestions";
+import { AlertTriangle, CheckCircle, AlertOctagon } from "lucide-react";
+
+// --- HELPER: Handle the 3-Class Logic ---
+const getDiagnosis = (pred: number) => {
+  switch (pred) {
+    case 0:
+      return {
+        label: "Healthy Profile",
+        color: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900 text-emerald-900 dark:text-emerald-100",
+        icon: <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+      };
+    case 1:
+      return {
+        label: "Moderate Anemia",
+        color: "bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900 text-amber-900 dark:text-amber-100",
+        icon: <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+      };
+    case 2:
+      return {
+        label: "Severe Anemia",
+        color: "bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-900 text-red-900 dark:text-red-100",
+        icon: <AlertOctagon className="w-6 h-6 text-red-600 dark:text-red-400" />
+      };
+    default:
+      return {
+        label: "Unknown Status",
+        color: "bg-gray-50 border-gray-100",
+        icon: null
+      };
+  }
+};
 
 export default function SimulationPage() {
   const [formData, setFormData] = useState<Record<string, string | number>>(() => {
@@ -37,7 +67,10 @@ export default function SimulationPage() {
         return Number(val);
       });
 
-      const response = await fetch("http://127.0.0.1:8000/predict", {
+      // ---------------------------------------------------------
+      // UPDATED API URL FOR HUGGING FACE
+      // ---------------------------------------------------------
+      const response = await fetch("https://sumoy47-anemia-api.hf.space/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ features: featureArray }),
@@ -48,17 +81,20 @@ export default function SimulationPage() {
       setResult(data);
     } catch (err: any) {
       console.error(err);
-      setError("Is the backend running? Check terminal.");
+      setError("Failed to connect to AI Server. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Get configuration based on current result
+  const diagnosis = result ? getDiagnosis(result.prediction) : null;
+
   return (
-    <div className="pt-24 pb-12 min-h-screen animate-fade-in">
+    <div className="pt-24 pb-12 min-h-screen animate-fade-in transition-colors duration-300">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">AI Diagnostic Simulation</h1>
-        <p className="text-slate-500 dark:text-slate-400">Enter clinical parameters to generate a GNN-based prediction.</p>
+        <p className="text-slate-500 dark:text-slate-400">Enter clinical parameters to generate a Multi-Class GNN prediction.</p>
       </div>
  
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -86,13 +122,23 @@ export default function SimulationPage() {
 
         {/* --- RIGHT CONTENT (Results) --- */}
         <div className="lg:col-span-8">
-          {result ? (
+          {result && diagnosis ? (
             <div className="space-y-6 animate-fade-in">
-              <div className={`p-8 rounded-3xl border shadow-sm ${result.prediction === 0 ? 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-900' : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900'}`}>
-                 <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Diagnostic Output</h2>
-                 <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white">{result.prediction === 0 ? "Potential Anemia" : "Healthy Profile"}</h1>
-                 <div className="mt-2 text-sm font-bold opacity-70">Confidence: {(result.confidence * 100).toFixed(1)}%</div>
+              
+              {/* Dynamic 3-Class Result Card */}
+              <div className={`p-8 rounded-3xl border shadow-sm ${diagnosis.color}`}>
+                 <div className="flex items-center gap-2 mb-2">
+                    {diagnosis.icon}
+                    <h2 className="text-xs font-bold uppercase tracking-widest opacity-80">Diagnostic Output</h2>
+                 </div>
+                 <h1 className="text-4xl font-extrabold">
+                    {diagnosis.label}
+                 </h1>
+                 <div className="mt-2 text-sm font-bold opacity-70">
+                   Confidence: {(result.confidence * 100).toFixed(1)}%
+                 </div>
               </div>
+
               <XAIChart shapValues={result.shap_values} />
               <Suggestions formData={formData} prediction={result.prediction} />
             </div>

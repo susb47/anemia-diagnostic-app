@@ -3,9 +3,41 @@
 import { useState, useEffect } from "react";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import ThemeToggle from './ThemeToggle';
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, Sun, Moon } from "lucide-react";
 
+// --- Internal Theme Toggle Component to ensure it works in one file ---
+function ThemeToggle() {
+  const [darkMode, setDarkMode] = useState(false);
+  useEffect(() => {
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      setDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      setDarkMode(false);
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    if (darkMode) {
+      document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
+      setDarkMode(false);
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.theme = 'dark';
+      setDarkMode(true);
+    }
+  };
+
+  return (
+    <button onClick={toggleTheme} className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors">
+      {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+    </button>
+  );
+}
+
+// --- Main Navbar Component ---
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -19,21 +51,21 @@ export default function Navbar() {
 
   useEffect(() => setIsOpen(false), [pathname]);
 
-  // The 9 Sections Structure
+  // --- FULL LINK STRUCTURE RESTORED ---
   const links = {
     main: [
-      { name: 'Home', href: '/' },       // 1. Home
-      { name: 'Team', href: '/team' },   // 7. About Team
-      { name: 'Contact', href: '/contact' }, // 8. Contact
+      { name: 'Home', href: '/' },       
+      { name: 'Team', href: '/team' },   
+      { name: 'Contact', href: '/contact' }, 
     ],
     research: [
-      { name: 'Project Timeline', href: '/timeline' }, // 2. Project Time
-      { name: 'Data Reports', href: '/data-reports' }, // 3. Data Reports
-      { name: 'Methodological System', href: '/methodology' }, // 4. Methodology
-      { name: 'Publication Status', href: '/publication' }, // 6. Publication
-      { name: 'References', href: '/references' }, // 9. References
+      { name: 'Project Timeline', href: '/timeline' }, 
+      { name: 'Data Reports', href: '/data-reports' }, 
+      { name: 'Methodological System', href: '/methodology' }, 
+      { name: 'Publication Status', href: '/publication' }, 
+      { name: 'References', href: '/references' }, 
     ],
-    system: { name: 'AneAI', href: '/simulation' } // 5. System renamed to AneAI
+    system: { name: 'AneAI', href: '/simulation' } 
   };
 
   return (
@@ -120,35 +152,19 @@ export default function Navbar() {
       {isOpen && (
         <div className="lg:hidden absolute top-full left-0 w-full bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-xl animate-fade-in max-h-[85vh] overflow-y-auto">
           <div className="px-4 py-6 space-y-1">
-            {/* 1. Home */}
-            <Link href="/" className="block px-4 py-3 rounded-xl text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Home</Link>
+            {links.main.map(link => (
+                <Link key={link.name} href={link.href} className="block px-4 py-3 rounded-xl text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">{link.name}</Link>
+            ))}
             
-            {/* 2. Timeline */}
-            <Link href="/timeline" className="block px-4 py-3 rounded-xl text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Project Timeline</Link>
-
-            {/* 3. Data Reports */}
-            <Link href="/data-reports" className="block px-4 py-3 rounded-xl text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Data Reports</Link>
-
-            {/* 4. Methodology */}
-            <Link href="/methodology" className="block px-4 py-3 rounded-xl text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Methodological System</Link>
-
-            {/* 6. Publication */}
-            <Link href="/publication" className="block px-4 py-3 rounded-xl text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Publication Status</Link>
-
-            {/* 7. Team */}
-            <Link href="/team" className="block px-4 py-3 rounded-xl text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">About Team</Link>
-
-            {/* 8. Contact */}
-            <Link href="/contact" className="block px-4 py-3 rounded-xl text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Contact</Link>
+            <div className="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Research</div>
+            {links.research.map(link => (
+                <Link key={link.name} href={link.href} className="block px-4 py-3 rounded-xl text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">{link.name}</Link>
+            ))}
             
-            {/* 9. References */}
-            <Link href="/references" className="block px-4 py-3 rounded-xl text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">References</Link>
-
             <div className="h-px bg-slate-100 dark:bg-slate-800 my-4"></div>
             
-            {/* 5. AneAI (Highlighted) */}
             <Link 
-              href="/simulation"
+              href={links.system.href}
               className="block w-full text-center bg-indigo-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none"
             >
               Launch AneAI

@@ -1,73 +1,86 @@
-import { FEATURES } from '../data/features';
+import React from 'react';
+import { Lightbulb, Stethoscope, Utensils, Activity } from 'lucide-react';
 
-interface Props {
-  formData: Record<string, string | number>;
-  prediction: number;
+interface SuggestionsProps {
+  prediction: number; // 0 = Healthy, 1 = Compensated Microcytosis, 2 = Severe Anemia
+  formData?: any;
 }
 
-export default function Suggestions({ formData, prediction }: Props) {
-  const suggestions = [];
-
-  const mcv = Number(formData['MCV']);
-  const ferritin = Number(formData['Ferritin']);
-
-  if (prediction === 0) { // Anemic
-    if (mcv < 80) {
-      suggestions.push({
-        title: 'Microcytic Anemia Alert',
-        desc: 'Low MCV (<80 fL) suggests Iron Deficiency. Check Ferritin levels.',
-        icon: '🩸',
-        // Light mode colors vs Dark mode colors
-        color: 'bg-amber-50 border-amber-400 text-amber-800 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-200'
-      });
-    } else if (mcv > 100) {
-      suggestions.push({
-        title: 'Macrocytic Anemia Alert',
-        desc: 'High MCV (>100 fL) often indicates Vitamin B12 or Folate deficiency.',
-        icon: '💊',
-        color: 'bg-purple-50 border-purple-400 text-purple-800 dark:bg-purple-900/20 dark:border-purple-700 dark:text-purple-200'
-      });
+export default function Suggestions({ prediction }: SuggestionsProps) {
+  
+  // Dynamic Content based on Prediction
+  const getContent = () => {
+    switch (prediction) {
+      case 0: // Healthy
+        return {
+          title: "Maintenance & Prevention",
+          description: "Blood parameters are within the normal physiological range. Focus on maintaining this healthy status.",
+          items: [
+            { icon: <Utensils size={18} />, text: "Continue a balanced diet rich in iron (spinach, red meat, lentils)." },
+            { icon: <Activity size={18} />, text: "Maintain regular physical activity to support cardiovascular health." },
+            { icon: <Stethoscope size={18} />, text: "Routine annual check-ups are sufficient; no immediate intervention needed." }
+          ]
+        };
+      case 1: // Compensated Microcytosis
+        return {
+          title: "Clinical Monitoring Required",
+          description: "RBCs are smaller than normal (Microcytic) but anemia is not yet severe. This is often a precursor state or a genetic trait.",
+          items: [
+            { icon: <Stethoscope size={18} />, text: "Evaluate Serum Ferritin to distinguish between Iron Deficiency and Thalassemia Trait." },
+            { icon: <Utensils size={18} />, text: "Increase Vitamin C intake to improve iron absorption efficiency." },
+            { icon: <Activity size={18} />, text: "Monitor for fatigue or shortness of breath during exercise." },
+            { icon: <Lightbulb size={18} />, text: "Genetic screening (Hemoglobin Electrophoresis) may be advised if family history exists." }
+          ]
+        };
+      case 2: // Severe Anemia
+        return {
+          title: "Immediate Intervention Needed",
+          description: "Hemoglobin levels are critically low. Oxygen transport capacity is significantly compromised.",
+          items: [
+            { icon: <Stethoscope size={18} />, text: "Consult a hematologist immediately for a complete blood panel." },
+            { icon: <Utensils size={18} />, text: "Therapeutic Iron supplementation (Oral or IV) is likely required under supervision." },
+            { icon: <Activity size={18} />, text: "Avoid strenuous physical activity until HGB levels stabilize." },
+            { icon: <Lightbulb size={18} />, text: "Investigate underlying causes: chronic blood loss, malabsorption, or bone marrow issues." }
+          ]
+        };
+      default:
+        return {
+          title: "Analysis Inconclusive",
+          description: "Please check your inputs and try again.",
+          items: []
+        };
     }
+  };
 
-    if (ferritin < 30) {
-      suggestions.push({
-        title: 'Low Iron Reserves',
-        desc: 'Ferritin is critically low. Consider iron-rich diet or supplementation.',
-        icon: '🥩',
-        color: 'bg-red-50 border-red-400 text-red-800 dark:bg-red-900/20 dark:border-red-700 dark:text-red-200'
-      });
-    }
-  }
-
-  if (String(formData['Substance_Use']) === 'Yes') {
-    suggestions.push({
-      title: 'Smoking / Substance Impact',
-      desc: 'Smoking can artificially raise HGB levels, masking anemia.',
-      icon: '🚬',
-      color: 'bg-slate-100 border-slate-400 text-slate-800 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300'
-    });
-  }
-
-  if (suggestions.length === 0) {
-    suggestions.push({
-      title: 'Maintain Healthy Lifestyle',
-      desc: 'Blood parameters appear balanced. Continue regular checkups.',
-      icon: '✅',
-      color: 'bg-emerald-50 border-emerald-400 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-200'
-    });
-  }
+  const content = getContent();
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mt-6 transition-colors">
-      <h3 className="font-bold text-slate-900 dark:text-white mb-4">Clinical Suggestions</h3>
-      <div className="grid gap-4">
-        {suggestions.map((sug, idx) => (
-          <div key={idx} className={`flex gap-4 p-4 rounded-xl border-l-4 ${sug.color}`}>
-            <div className="text-2xl">{sug.icon}</div>
-            <div>
-              <h4 className="text-sm font-bold uppercase opacity-90">{sug.title}</h4>
-              <p className="text-sm mt-1 opacity-80">{sug.desc}</p>
+    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 transition-colors">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+          <Lightbulb size={24} />
+        </div>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">AI-Generated Recommendations</h3>
+      </div>
+      
+      <div className="mb-4">
+        <h4 className="text-sm font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-400 mb-1">
+          {content.title}
+        </h4>
+        <p className="text-slate-600 dark:text-slate-400 text-sm">
+          {content.description}
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {content.items.map((item, idx) => (
+          <div key={idx} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+            <div className="mt-0.5 text-slate-400 dark:text-slate-500">
+              {item.icon}
             </div>
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              {item.text}
+            </p>
           </div>
         ))}
       </div>

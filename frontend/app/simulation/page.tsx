@@ -17,8 +17,9 @@ const getDiagnosis = (pred: number) => {
         icon: <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
       };
     case 1:
+      // UPDATED LABEL HERE
       return {
-        label: "Moderate Anemia",
+        label: "Compensated Microcytosis",
         color: "bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900 text-amber-900 dark:text-amber-100",
         icon: <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
       };
@@ -67,9 +68,7 @@ export default function SimulationPage() {
         return Number(val);
       });
 
-      // ---------------------------------------------------------
-      // UPDATED API URL FOR HUGGING FACE
-      // ---------------------------------------------------------
+      // MAKE SURE THIS MATCHES YOUR API URL
       const response = await fetch("https://sumoy47-anemia-api.hf.space/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -87,7 +86,6 @@ export default function SimulationPage() {
     }
   };
 
-  // Get configuration based on current result
   const diagnosis = result ? getDiagnosis(result.prediction) : null;
 
   return (
@@ -124,8 +122,6 @@ export default function SimulationPage() {
         <div className="lg:col-span-8">
           {result && diagnosis ? (
             <div className="space-y-6 animate-fade-in">
-              
-              {/* Dynamic 3-Class Result Card */}
               <div className={`p-8 rounded-3xl border shadow-sm ${diagnosis.color}`}>
                  <div className="flex items-center gap-2 mb-2">
                     {diagnosis.icon}
@@ -140,7 +136,8 @@ export default function SimulationPage() {
               </div>
 
               <XAIChart shapValues={result.shap_values} />
-              <Suggestions formData={formData} prediction={result.prediction} />
+              {/* Pass prediction to Suggestions */}
+              <Suggestions prediction={result.prediction} />
             </div>
           ) : (
             <div className="h-[600px] rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col items-center justify-center text-center p-12 transition-colors">
@@ -150,7 +147,6 @@ export default function SimulationPage() {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
